@@ -39,5 +39,10 @@ int main(int argc, const char **argv)
     for (i = 0; i < StringListSize(list); i++)
         printf("%s\n", list[i]);
     StringListDestroy(&list);
+    char **g;
+    StringListInit(&g);
+    StringListAdd(g, "t13t13t13t");
+    StringListDestroy(&g);
+
     return 0;
 }

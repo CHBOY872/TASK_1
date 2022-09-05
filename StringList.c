@@ -2,15 +2,66 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int start_size = 32;                     /* start len of arr */
-static int current_pos = 0;                     /* current position in array */
+static int start_size = 32; /* start len of arr */
+static int current_pos = 0; /* current position in array */
+
+static char ***list_array = NULL;
+static int list_array_count = 0;
+static int list_array_max_count = 32;
+static int *start_sizes = NULL;
+static int *current_poss = NULL;
 
 void StringListInit(char ***list)
 {
-    *list = malloc(sizeof(char *) * start_size);
+    if (!list_array)
+    {
+        list_array = malloc(sizeof(char **) * list_array_max_count);
+        start_sizes = malloc(sizeof(int) * list_array_max_count);
+        current_poss = malloc(sizeof(int) * list_array_max_count);
+        int i;
+        for (i = 0; i < list_array_max_count; i++)
+        {
+            list_array[i] = NULL;
+            start_sizes[i] = start_size;
+            current_poss[i] = current_pos;
+        }
+    }
+    if (list_array_count == list_array_max_count)
+    {
+        int new_list_array_max_count = list_array_max_count * 2;
+        char ***new_list_array =
+            malloc(sizeof(char **) * new_list_array_max_count);
+        int *new_start_sizes = malloc(sizeof(int) * new_list_array_max_count);
+        int *new_current_poss = malloc(sizeof(int) * new_list_array_max_count);
+        int i;
+        for (i = 0; i < new_list_array_max_count; i++)
+        {
+            new_list_array[i] = i < list_array_count ? list_array[i] : NULL;
+            new_start_sizes[i] =
+                i < list_array_count ? start_sizes[i] : start_size;
+            new_current_poss[i] =
+                i < list_array_count ? current_poss[i] : current_pos;
+        }
+        list_array_max_count = new_list_array_max_count;
+        free(start_sizes);
+        free(list_array);
+        free(current_poss);
+        start_sizes = new_start_sizes;
+        list_array = new_list_array;
+        current_poss = new_current_poss;
+    }
+
+    list_array[list_array_count] = malloc(sizeof(char *) * start_size);
+    start_sizes[list_array_count] = start_size;
+    current_poss[list_array_count] = current_pos;
+
     int i;
-    for (i = 0; i < start_size; i++)
-        (*list)[i] = NULL;
+    for (i = 0; i < start_sizes[list_array_count]; i++)
+        list_array[list_array_count][i] = NULL;
+
+    (*list) = list_array[list_array_count];
+
+    list_array_count++;
 }
 
 void StringListDestroy(char ***list)
@@ -19,33 +70,51 @@ void StringListDestroy(char ***list)
     for (i = 0; i < current_pos; i++)
         free((*list)[i]);
     free(*list);
+    *list = NULL;
+}
+
+int find_list_in_array(char **list, char ***lists)
+{
+    int i;
+    for (i = 0; i < list_array_count; i++)
+    {
+        if (list == lists[i])
+            return i;
+    }
+    return -1;
 }
 
 void StringListAdd(char **list, String str)
 {
+    int idx = find_list_in_array(list, list_array);
+    if (-1 == idx)
+        return;
     char ***temp = malloc(sizeof(char **));
     *temp = list;
     char *str_tmp = malloc(strlen(str) + 1);
-    if (current_pos >= start_size)
+    if (current_poss[idx] >= start_sizes[idx])
     {
-        int new_size = start_size * 2;
+        int new_size = start_sizes[idx] * 2;
         char **tmp = malloc(sizeof(char *) * new_size);
         int i;
         for (i = 0; i < new_size; i++)
             tmp[i] = i < start_size ? list[i] : NULL;
         free(*temp);
-        start_size = new_size;
+        start_sizes[idx] = new_size;
         *temp = tmp;
     }
 
     strcpy(str_tmp, str);
-    (*temp)[current_pos] = str_tmp;
-    current_pos++;
+    (*temp)[current_poss[idx]] = str_tmp;
+    current_poss[idx]++;
     free(temp);
 }
 
 void StringListRemove(char **list, String str)
 {
+    int idx = find_list_in_array(list, list_array);
+    if (-1 == idx)
+        return;
     char ***temp = malloc(sizeof(char **));
     *temp = list;
     int i = 0;
@@ -55,14 +124,14 @@ void StringListRemove(char **list, String str)
         {
             free((*temp)[i]);
             (*temp)[i] = NULL;
-            int temp_current_pos = current_pos;
+            int temp_current_pos = current_poss[idx];
             int j;
             for (j = i; j < temp_current_pos - 1; j++)
             {
                 (*temp)[j] = (*temp)[j + 1];
                 (*temp)[j + 1] = NULL;
             }
-            current_pos--;
+            current_poss[idx]--;
             continue;
         }
         i++;
@@ -72,13 +141,19 @@ void StringListRemove(char **list, String str)
 
 int StringListSize(char **list)
 {
-    return current_pos;
+    int idx = find_list_in_array(list, list_array);
+    if (idx == -1)
+        return -1;
+    return current_poss[idx];
 }
 
 int StringListIndexOf(char **list, char *str)
 {
+    int idx = find_list_in_array(list, list_array);
+    if (idx == -1)
+        return -1;
     int i;
-    for (i = 0; i < current_pos; i++)
+    for (i = 0; i < current_poss[idx]; i++)
     {
         if (!strcmp(list[i], str))
             return i;
@@ -92,10 +167,10 @@ int is_at_arr(const char *str, int len, char **arr) /* check if the string */
     int i;
     for (i = 0; i < len; i++)
     {
-        if (!arr[i])                                /* if the el is NULL */
-            return 0;                               /* return because next */
-                                                    /* elements will */
-                                                    /* be NULL too */
+        if (!arr[i])  /* if the el is NULL */
+            return 0; /* return because next */
+                      /* elements will */
+                      /* be NULL too */
         if (!strcmp(str, arr[i]))
             return 1;
     }
@@ -104,7 +179,12 @@ int is_at_arr(const char *str, int len, char **arr) /* check if the string */
 
 void StringListRemoveDuplicates(char **list)
 {
-    char **temp = NULL;
+    int idx = find_list_in_array(list, list_array);
+    if (-1 == idx)
+        return;
+
+    char **temp = malloc(sizeof(char) * current_poss[idx] + 1);
+
     char ***new_list = malloc(sizeof(char **));
     *new_list = list;
     StringListInit(&temp);
