@@ -81,7 +81,7 @@ void StringListDestroy(char ***list)
     if (-1 == idx)
         return;
     int i;
-    for (i = 0; i < current_pos; i++)
+    for (i = 0; i < current_poss[idx]; i++)
         free((*list)[i]);
     free(*list);
     *list = NULL;
@@ -121,7 +121,7 @@ void StringListRemove(char **list, String str)
     char ***temp = malloc(sizeof(char **));
     *temp = list;
     int i = 0;
-    while (i < current_pos)
+    while (i < current_poss[idx])
     {
         if (!strcmp((*temp)[i], str))
         {
@@ -186,15 +186,14 @@ void StringListRemoveDuplicates(char **list)
     if (-1 == idx)
         return;
 
-    char **temp = malloc(sizeof(char) * current_poss[idx] + 1);
+    char **temp = malloc(sizeof(char *) * current_poss[idx]);
 
     char ***new_list = malloc(sizeof(char **));
     *new_list = list;
-    StringListInit(&temp);
     int i, k = 0;
-    for (i = 0; i < current_pos; i++)
+    for (i = 0; i < current_poss[idx]; i++)
     {
-        if (!is_at_arr(list[i], current_pos, temp))
+        if (!is_at_arr(list[i], current_poss[idx], temp))
         {
             temp[k] = malloc(strlen(list[i]) + 1);
             strcpy(temp[k], list[i]);
@@ -202,19 +201,22 @@ void StringListRemoveDuplicates(char **list)
         }
         free(list[i]);
     }
-    for (i = 0; i < current_pos; i++)
+    for (i = 0; i < current_poss[idx]; i++)
         (*new_list)[i] = i < k ? temp[i] : 0;
 
-    current_pos = k;
+    current_poss[idx] = k;
     free(temp);
     free(new_list);
 }
 
 void StringListReplaceInStrings(char **list, char *before, char *after)
 {
+    int idx = find_list_in_array(list, list_array);
+    if (-1 == idx)
+        return;
     int new_str_len = strlen(after) + 1;
     int i;
-    for (i = 0; i < current_pos; i++)
+    for (i = 0; i < current_poss[idx]; i++)
     {
         if (!strcmp(before, list[i]))
         {
@@ -227,13 +229,17 @@ void StringListReplaceInStrings(char **list, char *before, char *after)
 
 void StringListSort(char **list)
 {
+    int idx = find_list_in_array(list, list_array);
+    if (-1 == idx)
+        return;
+
     char *tmp;
     int quit = 0;
     while (!quit)
     {
         quit = 1;
         int i;
-        for (i = current_pos - 1; i >= 1; i--)
+        for (i = current_poss[idx] - 1; i >= 1; i--)
         {
             if (strcmp(list[i], list[i - 1]) > 0)
             {
