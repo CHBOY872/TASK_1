@@ -64,15 +64,6 @@ void StringListInit(char ***list)
     list_array_count++;
 }
 
-void StringListDestroy(char ***list)
-{
-    int i;
-    for (i = 0; i < current_pos; i++)
-        free((*list)[i]);
-    free(*list);
-    *list = NULL;
-}
-
 int find_list_in_array(char **list, char ***lists)
 {
     int i;
@@ -82,6 +73,18 @@ int find_list_in_array(char **list, char ***lists)
             return i;
     }
     return -1;
+}
+
+void StringListDestroy(char ***list)
+{
+    int idx = find_list_in_array(*list, list_array);
+    if (-1 == idx)
+        return;
+    int i;
+    for (i = 0; i < current_pos; i++)
+        free((*list)[i]);
+    free(*list);
+    *list = NULL;
 }
 
 void StringListAdd(char **list, String str)
