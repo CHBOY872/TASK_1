@@ -187,10 +187,12 @@ void StringListRemoveDuplicates(char **list)
         return;
 
     char **temp = malloc(sizeof(char *) * current_poss[idx]);
-
+    int i;
+    for (i = 0; i < current_poss[idx]; i++)
+		temp[i] = NULL;	
     char ***new_list = malloc(sizeof(char **));
     *new_list = list;
-    int i, k = 0;
+    int k = 0;
     for (i = 0; i < current_poss[idx]; i++)
     {
         if (!is_at_arr(list[i], current_poss[idx], temp))
