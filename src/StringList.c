@@ -11,45 +11,51 @@ static int list_array_max_count = 32;
 static int *start_sizes = NULL;
 static int *current_poss = NULL;
 
+void InitLists()
+{
+    list_array = malloc(sizeof(char **) * list_array_max_count);
+    start_sizes = malloc(sizeof(int) * list_array_max_count);
+    current_poss = malloc(sizeof(int) * list_array_max_count);
+    int i;
+    for (i = 0; i < list_array_max_count; i++)
+    {
+        list_array[i] = NULL;
+        start_sizes[i] = start_size;
+        current_poss[i] = current_pos;
+    }
+}
+
+void ResizeLists()
+{
+    int new_list_array_max_count = list_array_max_count * 2;
+    char ***new_list_array =
+        malloc(sizeof(char **) * new_list_array_max_count);
+    int *new_start_sizes = malloc(sizeof(int) * new_list_array_max_count);
+    int *new_current_poss = malloc(sizeof(int) * new_list_array_max_count);
+    int i;
+    for (i = 0; i < new_list_array_max_count; i++)
+    {
+        new_list_array[i] = i < list_array_count ? list_array[i] : NULL;
+        new_start_sizes[i] =
+            i < list_array_count ? start_sizes[i] : start_size;
+        new_current_poss[i] =
+            i < list_array_count ? current_poss[i] : current_pos;
+    }
+    list_array_max_count = new_list_array_max_count;
+    free(start_sizes);
+    free(list_array);
+    free(current_poss);
+    start_sizes = new_start_sizes;
+    list_array = new_list_array;
+    current_poss = new_current_poss;
+}
+
 void StringListInit(char ***list)
 {
     if (!list_array)
-    {
-        list_array = malloc(sizeof(char **) * list_array_max_count);
-        start_sizes = malloc(sizeof(int) * list_array_max_count);
-        current_poss = malloc(sizeof(int) * list_array_max_count);
-        int i;
-        for (i = 0; i < list_array_max_count; i++)
-        {
-            list_array[i] = NULL;
-            start_sizes[i] = start_size;
-            current_poss[i] = current_pos;
-        }
-    }
+        InitLists();
     if (list_array_count == list_array_max_count)
-    {
-        int new_list_array_max_count = list_array_max_count * 2;
-        char ***new_list_array =
-            malloc(sizeof(char **) * new_list_array_max_count);
-        int *new_start_sizes = malloc(sizeof(int) * new_list_array_max_count);
-        int *new_current_poss = malloc(sizeof(int) * new_list_array_max_count);
-        int i;
-        for (i = 0; i < new_list_array_max_count; i++)
-        {
-            new_list_array[i] = i < list_array_count ? list_array[i] : NULL;
-            new_start_sizes[i] =
-                i < list_array_count ? start_sizes[i] : start_size;
-            new_current_poss[i] =
-                i < list_array_count ? current_poss[i] : current_pos;
-        }
-        list_array_max_count = new_list_array_max_count;
-        free(start_sizes);
-        free(list_array);
-        free(current_poss);
-        start_sizes = new_start_sizes;
-        list_array = new_list_array;
-        current_poss = new_current_poss;
-    }
+        ResizeLists();
 
     list_array[list_array_count] = malloc(sizeof(char *) * start_size);
     start_sizes[list_array_count] = start_size;
@@ -187,12 +193,10 @@ void StringListRemoveDuplicates(char **list)
         return;
 
     char **temp = malloc(sizeof(char *) * current_poss[idx]);
-    int i;
-    for (i = 0; i < current_poss[idx]; i++)
-		temp[i] = NULL;	
+
     char ***new_list = malloc(sizeof(char **));
     *new_list = list;
-    int k = 0;
+    int i, k = 0;
     for (i = 0; i < current_poss[idx]; i++)
     {
         if (!is_at_arr(list[i], current_poss[idx], temp))

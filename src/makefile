@@ -9,3 +9,18 @@ OBJMODULES=$(SRCMODULES:.c=.o)
 
 main: main.c $(OBJMODULES)
 	$(CC) $(CFLAGS) -g $^ -o $@
+
+clean:
+	rm *.o
+
+ifneq (clean, $(MAKECMDGOALS))
+-include deps.mk
+endif
+
+
+deps.mk: $(SRCMODULES)
+	$(CC) -MM $^ > $@
+
+all:
+	make main
+	make clean
