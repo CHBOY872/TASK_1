@@ -188,15 +188,16 @@ int is_at_arr(const char *str, int len, char **arr) /* check if the string */
 
 void StringListRemoveDuplicates(char **list)
 {
+    int i, k = 0;
     int idx = find_list_in_array(list, list_array);
     if (-1 == idx)
         return;
 
     char **temp = malloc(sizeof(char *) * current_poss[idx]);
-
+    for (i = 0; i < current_poss[idx]; i++)
+        temp[i] = NULL;
     char ***new_list = malloc(sizeof(char **));
     *new_list = list;
-    int i, k = 0;
     for (i = 0; i < current_poss[idx]; i++)
     {
         if (!is_at_arr(list[i], current_poss[idx], temp))
@@ -206,13 +207,16 @@ void StringListRemoveDuplicates(char **list)
             k++;
         }
         free(list[i]);
+        list[i] = NULL;
     }
     for (i = 0; i < current_poss[idx]; i++)
         (*new_list)[i] = i < k ? temp[i] : 0;
 
     current_poss[idx] = k;
     free(temp);
+    temp = NULL;
     free(new_list);
+    new_list = NULL;
 }
 
 void StringListReplaceInStrings(char **list, char *before, char *after)
