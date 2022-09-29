@@ -1,5 +1,9 @@
 CC=gcc
 CFLAGS=-Wall -ansi
+CPP=g++
+CPPFLAGS=-Wall
+ISOSTD=-std=c++11
+LIBS=-lgtest -lgtest_main -lpthread
 SRCMODULES=StringList.c
 HDRMODULES=$(SRCMODULES:.c=.h)
 OBJMODULES=$(SRCMODULES:.c=.o)
@@ -9,6 +13,9 @@ OBJMODULES=$(SRCMODULES:.c=.o)
 
 main: main.c $(OBJMODULES)
 	$(CC) $(CFLAGS) -g $^ -o $@
+
+test: test.cpp $(OBJMODULES)
+	$(CPP) $(CPPFLAGS) -g $^ $(LIBS) -o $@ $(ISOSTD)
 
 clean:
 	rm *.o
@@ -21,6 +28,9 @@ endif
 deps.mk: $(SRCMODULES)
 	$(CC) -MM $^ > $@
 
+runtest:
+	make test
+	make clean
 all:
 	make main
 	make clean
